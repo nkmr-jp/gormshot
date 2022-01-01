@@ -136,6 +136,7 @@ func (s *gormShot) Assert(t *testing.T, model interface{}, selectFields interfac
 		return false
 	}
 
+	format := "Not match stored snapshot: %v:%v"
 	scanner := bufio.NewScanner(f)
 	line := 0
 	for scanner.Scan() {
@@ -153,7 +154,7 @@ func (s *gormShot) Assert(t *testing.T, model interface{}, selectFields interfac
 			return false
 		}
 		actual := string(str)
-		assert.JSONEqf(t, expected, actual, "Diff detected. %v:%v", s.getSnapshotPath(t), line)
+		assert.JSONEqf(t, expected, actual, format, s.getSnapshotPath(t), line)
 	}
 	if err := scanner.Err(); err != nil {
 		t.Error(err)
@@ -162,7 +163,7 @@ func (s *gormShot) Assert(t *testing.T, model interface{}, selectFields interfac
 	// Assert that snapshot line count and db data count are equal.
 	var count int64
 	tx.Count(&count)
-	assert.Equalf(t, line, int(count), "Data count is not match. %v:%v", s.getSnapshotPath(t), line)
+	assert.Equalf(t, line, int(count), format, s.getSnapshotPath(t), line)
 
 	return
 }
