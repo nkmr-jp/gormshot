@@ -93,7 +93,6 @@ func TestAssert(t *testing.T) {
 		db.Create(&User{Name: "Alice", Age: 20})
 		db.Create(&User{Name: "Bob", Age: 45})
 		db.Create(&User{Name: "Carol", Age: 31})
-		db.Create(&User{Name: "Carol", Age: 31})
 		shot := gormshot.New(db)
 		shot.Assert(t, &User{}, &UserSnap{}, "name desc,age")
 	})
