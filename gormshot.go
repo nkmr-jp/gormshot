@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -32,8 +33,18 @@ func (s *gormShot) getSnapshotDir() string {
 	return s.snapshotDir
 }
 
-func (s *gormShot) getSnapshotPath(t *testing.T) string {
-	return s.getSnapshotDir() + "/" + strings.Replace(t.Name(), "/", "__", 1) + ".jsonl"
+func (s *gormShot) getSnapshotPath(t *testing.T, snap interface{}) string {
+	snapName := s.getStructName(snap)
+	testName := strings.Replace(t.Name(), "/", "__", 1)
+	return s.getSnapshotDir() + "/" + testName + "--" + snapName + ".jsonl"
+}
+
+func (s *gormShot) getStructName(val interface{}) string {
+	if t := reflect.TypeOf(val); t.Kind() == reflect.Ptr {
+		return t.Elem().Name()
+	} else {
+		return t.Name()
+	}
 }
 
 func (s *gormShot) SetSnapshotDir(option string) *gormShot {
@@ -69,7 +80,7 @@ func (s *gormShot) Save(t *testing.T, model interface{}, selectFields interface{
 		return false
 	}
 
-	f, _ := os.Create(s.getSnapshotPath(t))
+	f, _ := os.Create(s.getSnapshotPath(t, selectFields))
 	defer func(f *os.File) {
 		if err := f.Close(); err != nil {
 			t.Error(err)
@@ -107,7 +118,7 @@ func (s *gormShot) Save(t *testing.T, model interface{}, selectFields interface{
 func (s *gormShot) Assert(t *testing.T, model interface{}, selectFields interface{}, order string) (flg bool) {
 	t.Helper()
 	// Open snapshot file. if no file do save.
-	f, err := os.Open(s.getSnapshotPath(t))
+	f, err := os.Open(s.getSnapshotPath(t, selectFields))
 	if errors.Is(err, os.ErrNotExist) || s.updateFlag {
 		return s.Save(t, model, selectFields, order)
 	} else if err != nil {
@@ -154,7 +165,7 @@ func (s *gormShot) Assert(t *testing.T, model interface{}, selectFields interfac
 			return false
 		}
 		actual := string(str)
-		assert.JSONEqf(t, expected, actual, format, s.getSnapshotPath(t), line)
+		assert.JSONEqf(t, expected, actual, format, s.getSnapshotPath(t, selectFields), line)
 	}
 	if err := scanner.Err(); err != nil {
 		t.Error(err)
@@ -163,7 +174,7 @@ func (s *gormShot) Assert(t *testing.T, model interface{}, selectFields interfac
 	// Assert that snapshot line count and db data count are equal.
 	var count int64
 	tx.Count(&count)
-	assert.Equalf(t, line, int(count), format, s.getSnapshotPath(t), line)
+	assert.Equalf(t, line, int(count), format, s.getSnapshotPath(t, selectFields), line)
 
 	return
 }

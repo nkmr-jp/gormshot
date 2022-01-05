@@ -77,12 +77,12 @@ func TestSave(t *testing.T) {
 	expected := `{"Code":"D42","Price":100}
 {"Code":"D43","Price":110}
 `
-	actual, _ := os.ReadFile(dir + "/TestSave.jsonl")
+	actual, _ := os.ReadFile(dir + "/TestSave--ProductSnap.jsonl")
 	assert.Equal(t, expected, string(actual))
 
 	t.Run("when Run", func(t *testing.T) {
 		shot.Save(t, &Product{}, &ProductSnap{}, "code")
-		actual, _ = os.ReadFile(dir + "/TestSave__when_Run.jsonl")
+		actual, _ = os.ReadFile(dir + "/TestSave__when_Run--ProductSnap.jsonl")
 		assert.Equal(t, expected, string(actual))
 	})
 }
@@ -99,7 +99,7 @@ func TestAssert(t *testing.T) {
 	t.Run("update snap", func(t *testing.T) {
 		resetTable()
 		db.Create(&User{Name: "Alice", Age: 21})
-		snapFile := "./.snapshot/TestAssert__update_snap.jsonl"
+		snapFile := "./.snapshot/TestAssert__update_snap--UserSnap.jsonl"
 		before, _ := os.ReadFile(snapFile)
 		assert.Equal(t, `{"Name":"Alice","Age":20}`+"\n", string(before))
 
